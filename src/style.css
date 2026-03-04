@@ -1,0 +1,55 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #333333;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Shibui Color Palette */
+  --shibui-orange: #FF8A4C;
+  --shibui-orange-dark: #E67A44;
+  --shibui-light-orange: #FFF3EB;
+  --shibui-gray: #F8F9FA;
+  --shibui-dark-gray: #333333;
+
+  /* Border Radius */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+  /* Global Design Tokens */
+  --color-primary: var(--shibui-orange);
+  --color-primary-dark: var(--shibui-orange-dark);
+  --color-bg: #ffffff;
+  --color-bg-alt: var(--shibui-gray);
+  --color-text: var(--shibui-dark-gray);
+  --color-text-light: #6b7280;
+  --color-border: #e5e7eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.w-full {
+  width: 100%;
+}
