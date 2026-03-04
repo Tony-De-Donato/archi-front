@@ -6,7 +6,7 @@ import JobBoardView from '../views/JobBoardView.vue';
 import ProfileView from '../views/ProfileView.vue';
 import { useAuth } from '../composables/useAuth';
 import ForgotPasswordView from "../views/ForgotPasswordView.vue";
-import CompanyOffersView from "../views/CompanyOffersView";
+import CompanyOffersView from "../views/CompanyOffersView.vue";
 
 const routes = [
   {
