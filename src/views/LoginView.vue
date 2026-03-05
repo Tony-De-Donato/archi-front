@@ -35,21 +35,18 @@
         </BaseButton>
       </form>
 
-      <div class="forgot-password-link">
-        <router-link to="/forgot-password" class="shibui-link">Mot de passe oublié ?</router-link>
-      </div>
 
       <div class="divider">
         <div class="divider-line"></div>
         <div class="divider-text">
-          <span>ou</span>
         </div>
       </div>
 
       <div class="login-footer">
         <p class="terms-text">
           En créant un compte ou en vous connectant, vous comprenez et acceptez les
-          <a href="#" class="shibui-link">conditions d'utilisation</a> d'Indeed.
+          <a href="https://canardsdulacbrome.com/trouver-une-recette/" class="shibui-link" target="_blank" rel="noopener noreferrer">conditions d'utilisation</a>
+          de shibui.
         </p>
         <p class="register-link-text">
           Nouveau sur Shibui ?
