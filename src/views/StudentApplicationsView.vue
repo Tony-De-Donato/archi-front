@@ -110,17 +110,6 @@ async function fetchApplications() {
   await Promise.all(loadPromises);
 }
 
-async function handleCancel(id: number) {
-  if (!confirm('Voulez-vous vraiment annuler cette candidature ?')) return;
-  
-  try {
-    await applicationStore.cancelApplication(id);
-  } catch (err) {
-    console.error('Failed to cancel application:', err);
-    alert('Erreur lors de l\'annulation de la candidature.');
-  }
-}
-
 function getOffer(app: any) {
   return app.offer || offerStore.getOfferById(app.offerId);
 }

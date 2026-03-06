@@ -18,7 +18,6 @@
 
 <script setup lang="ts">
 import AppHeader from '../organisms/AppHeader.vue';
-import BaseTypography from '../atoms/BaseTypography.vue';
 
 withDefaults(defineProps<{
   isAuthenticated: boolean;

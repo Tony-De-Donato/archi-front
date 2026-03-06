@@ -77,8 +77,6 @@ import ShibuiLogo from '../components/atoms/ShibuiLogo.vue';
 import BaseCard from '../components/atoms/BaseCard.vue';
 import BaseInput from '../components/atoms/BaseInput.vue';
 import BaseButton from '../components/atoms/BaseButton.vue';
-import BaseTypography from '../components/atoms/BaseTypography.vue';
-import FormField from '../components/molecules/FormField.vue';
 
 const email = ref('');
 const otp = ref('');

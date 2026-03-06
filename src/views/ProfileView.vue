@@ -119,7 +119,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { 
   studentControllerGetStudentProfile,
@@ -133,23 +132,13 @@ import BaseButton from '../components/atoms/BaseButton.vue';
 import BaseCard from '../components/atoms/BaseCard.vue';
 import BaseTypography from '../components/atoms/BaseTypography.vue';
 import FormField from '../components/molecules/FormField.vue';
-import type { Application } from '../types';
 
 const { user, logout } = useAuth();
-const router = useRouter();
 const profile = ref<any>(null);
 const profileLoading = ref(false);
 const editingProfile = ref(false);
 const savingProfile = ref(false);
 const profileForm = ref<any>({});
-
-function goHome() {
-  if (user.value?.role === 'COMPANY') {
-    router.push('/company/offers');
-  } else {
-    router.push('/offers');
-  }
-}
 
 const industryLabels: Record<string, string> = {
   AEROSPACE: 'Aéronautique',
@@ -237,7 +226,7 @@ onMounted(async () => {
   fetchProfile();
 });
 
-async function handleDelete() {
+async function handleDeleteAccount() {
   if (!user.value) return;
   if (!confirm('Voulez-vous vraiment supprimer votre compte ? Cette action est irréversible.')) return;
   try {

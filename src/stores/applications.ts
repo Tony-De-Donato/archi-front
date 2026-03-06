@@ -7,7 +7,6 @@ import {
   offerApplicationControllerCancelApplication
 } from '../openApi';
 import type { Application } from '../types';
-import { useOfferStore } from './offers';
 
 export const useApplicationStore = defineStore('applications', () => {
   const applications = ref<Application[]>([]);
@@ -50,7 +49,7 @@ export const useApplicationStore = defineStore('applications', () => {
     }
   }
 
-  async function applyToOffer(offerId: number, studentId: number, description: string = '') {
+  async function applyToOffer(offerId: number, _studentId: number, description: string = '') {
     loading.value = true;
     try {
       const { data } = await offerApplicationControllerApply({

@@ -180,7 +180,7 @@ onMounted(async () => {
   }
   
   if (offerStore.publishedOffers.length > 0) {
-    selectedOffer.value = offerStore.publishedOffers[0];
+    selectedOffer.value = offerStore.publishedOffers[0] || null;
   }
 });
 
