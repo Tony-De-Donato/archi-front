@@ -9,7 +9,7 @@
 
     <!-- Login Card -->
     <BaseCard class="login-card">
-      <BaseTypography variant="h3" bold class="login-title">Préparez-vous pour l'étape suivante</BaseTypography>
+      <BaseTypography variant="h3" bold class="login-title">Connexion</BaseTypography>
       <BaseTypography variant="p" class="login-subtitle">Créez un compte ou connectez-vous.</BaseTypography>
 
       <form @submit.prevent="handleLogin" class="login-form">
