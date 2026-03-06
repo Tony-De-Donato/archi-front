@@ -1,159 +1,178 @@
 <template>
-  <div class="profile-view">
-    <header class="profile-header">
-      <ShibuiLogo size="md" @click="$router.push('/offers')" class="clickable-logo" />
-      <BaseButton size="sm" variant="ghost" @click="$router.push('/offers')">Retour aux offres</BaseButton>
-    </header>
-
-    <main class="profile-main">
-      <h1 class="profile-title">Mon Profil</h1>
+  <MainLayout
+    :is-authenticated="!!user"
+    :user-email="user?.email"
+    :user-role="user?.role"
+    @logout="logout"
+  >
+    <div class="profile-container">
+      <BaseTypography variant="h2" bold class="page-title">Mon Profil</BaseTypography>
+      
       <div class="profile-grid">
-        <div class="profile-content">
+        <div class="main-content">
           <!-- Account Info -->
-          <BaseCard>
-            <template #header>
-              <h2 class="card-title">Informations du compte</h2>
-            </template>
-            <div class="info-list">
-              <div class="info-item">
-                <label class="info-label">Email</label>
-                <p class="info-value">{{ user?.email }}</p>
+          <BaseCard class="profile-card">
+            <BaseTypography variant="h3" bold class="card-title">Informations du compte</BaseTypography>
+            
+            <div class="info-grid">
+              <div class="info-group">
+                <BaseTypography variant="label">Email</BaseTypography>
+                <BaseTypography variant="p">{{ user?.email }}</BaseTypography>
               </div>
-              <div class="info-item">
-                <label class="info-label">Rôle</label>
-                <p class="info-value">{{ user?.role }}</p>
+              <div class="info-group">
+                <BaseTypography variant="label">Rôle</BaseTypography>
+                <BaseTypography variant="p">{{ user?.role }}</BaseTypography>
               </div>
-              <!-- Profile details -->
+            </div>
+
+            <div class="profile-details-section">
               <template v-if="profile && !editingProfile">
-                <div v-if="user?.role === 'STUDENT'" class="profile-details-group">
-                  <div class="info-item">
-                    <label class="info-label">Prénom</label>
-                    <p class="info-value">{{ profile.firstName }}</p>
+                <div v-if="user?.role === 'STUDENT'" class="details-grid">
+                  <div class="info-group">
+                    <BaseTypography variant="label">Prénom</BaseTypography>
+                    <BaseTypography variant="p">{{ profile.firstName }}</BaseTypography>
                   </div>
-                  <div class="info-item">
-                    <label class="info-label">Nom</label>
-                    <p class="info-value">{{ profile.lastName }}</p>
-                  </div>
-                  <div v-if="profile.fieldOfStudy" class="info-item">
-                    <label class="info-label">Secteur d'étude</label>
-                    <p class="info-value">{{ profile.fieldOfStudy }}</p>
+                  <div class="info-group">
+                    <BaseTypography variant="label">Nom</BaseTypography>
+                    <BaseTypography variant="p">{{ profile.lastName }}</BaseTypography>
                   </div>
                 </div>
-                <div v-else-if="user?.role === 'COMPANY'" class="profile-details-group">
-                  <div class="info-item">
-                    <label class="info-label">Nom de l'entreprise</label>
-                    <p class="info-value">{{ profile.legalName }}</p>
+                <div v-else-if="user?.role === 'COMPANY'" class="details-grid">
+                  <div class="info-group">
+                    <BaseTypography variant="label">Nom de l'entreprise</BaseTypography>
+                    <BaseTypography variant="p">{{ profile.legalName }}</BaseTypography>
                   </div>
-                  <div class="info-item">
-                    <label class="info-label">Secteur</label>
-                    <p class="info-value">{{ profile.industry }}</p>
+                  <div class="info-group">
+                    <BaseTypography variant="label">SIRET</BaseTypography>
+                    <BaseTypography variant="p">{{ profile.siret || 'Non renseigné' }}</BaseTypography>
+                  </div>
+                  <div class="info-group">
+                    <BaseTypography variant="label">Secteur</BaseTypography>
+                    <BaseTypography variant="p">{{ formatIndustry(profile.industry) }}</BaseTypography>
+                  </div>
+                  <div class="info-group full-width">
+                    <BaseTypography variant="label">Description</BaseTypography>
+                    <BaseTypography variant="p" class="description-text">{{ profile.description || 'Aucune description' }}</BaseTypography>
                   </div>
                 </div>
-                <BaseButton variant="ghost" size="sm" @click="editingProfile = true">Modifier le profil</BaseButton>
+                <div class="card-actions">
+                  <BaseButton variant="ghost" size="sm" @click="editingProfile = true">Modifier le profil</BaseButton>
+                </div>
               </template>
 
               <!-- Edit Profile Form -->
-              <form v-else-if="editingProfile" @submit.prevent="handleUpdateProfile" class="edit-profile-form">
+              <form v-else-if="editingProfile" @submit.prevent="handleUpdateProfile" class="edit-form">
                 <template v-if="user?.role === 'STUDENT'">
-                  <div class="form-group">
-                    <label>Prénom</label>
-                    <input v-model="profileForm.firstName" class="form-input" required />
-                  </div>
-                  <div class="form-group">
-                    <label>Nom</label>
-                    <input v-model="profileForm.lastName" class="form-input" required />
+                  <div class="form-row">
+                    <FormField label="Prénom" v-model="profileForm.firstName" required />
+                    <FormField label="Nom" v-model="profileForm.lastName" required />
                   </div>
                 </template>
                 <template v-else-if="user?.role === 'COMPANY'">
-                  <div class="form-group">
-                    <label>Nom légal</label>
-                    <input v-model="profileForm.legalName" class="form-input" required />
-                  </div>
-                  <div class="form-group">
-                    <label>Secteur</label>
-                    <input v-model="profileForm.industry" class="form-input" required />
-                  </div>
+                  <FormField label="Nom légal" v-model="profileForm.legalName" required />
+                  <FormField label="SIRET" v-model="profileForm.siret" placeholder="14 chiffres" maxlength="14" />
+                  <FormField label="Secteur">
+                    <select v-model="profileForm.industry" class="ds-select">
+                      <option value="AEROSPACE">Aéronautique</option>
+                      <option value="AGRICULTURE">Agriculture</option>
+                      <option value="AUTOMOTIVE">Automobile</option>
+                      <option value="BANKING_INSURANCE">Banque & Assurance</option>
+                      <option value="CONSTRUCTION">Construction</option>
+                      <option value="EDUCATION">Éducation</option>
+                      <option value="ENERGY">Énergie</option>
+                      <option value="HEALTHCARE">Santé</option>
+                      <option value="HOSPITALITY">Hôtellerie & Restauration</option>
+                      <option value="IT_SERVICES">Services IT</option>
+                      <option value="LUXURY">Luxe</option>
+                      <option value="MANUFACTURING">Industrie</option>
+                      <option value="MEDIA_ENTERTAINMENT">Médias & Divertissement</option>
+                      <option value="RETAIL">Commerce de détail</option>
+                      <option value="PUBLIC_SECTOR">Secteur public</option>
+                      <option value="TRANSPORT_LOGISTICS">Transport & Logistique</option>
+                    </select>
+                  </FormField>
+                  <FormField label="Description">
+                    <textarea v-model="profileForm.description" class="ds-textarea" rows="4"></textarea>
+                  </FormField>
                 </template>
                 <div class="form-actions">
                   <BaseButton variant="ghost" size="sm" @click="editingProfile = false">Annuler</BaseButton>
-                  <BaseButton type="submit" size="sm" :loading="savingProfile">Enregistrer</BaseButton>
+                  <BaseButton type="submit" size="sm" :loading="profileLoading">Enregistrer</BaseButton>
                 </div>
               </form>
-              <div v-if="user?.role === 'COMPANY'" class="profile-actions">
-                <router-link to="/company/offers">
-                  <BaseButton variant="outline">Gérer mes offres</BaseButton>
-                </router-link>
-              </div>
-              <div v-else-if="profileLoading" class="profile-loading">
-                Chargement du profil...
-              </div>
             </div>
           </BaseCard>
 
-          <!-- Applications (If student) -->
-          <BaseCard v-if="user?.role === 'STUDENT'">
-            <template #header>
-              <h2 class="card-title">Mes candidatures</h2>
-            </template>
-            <div v-if="applications.length > 0" class="applications-list">
-              <div v-for="app in applications" :key="app.id" class="application-item">
-                <div class="app-info">
-                  <h3 class="app-title">Offre #{{ app.offerId }}</h3>
-                  <p class="app-date">Postulé le {{ new Date(app.appliedAt).toLocaleDateString() }}</p>
-                </div>
-                <div class="app-actions">
-                  <span class="status-badge">
-                    {{ app.status }}
-                  </span>
-                  <button @click="handleCancel(app.id)" class="cancel-button">
-                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <p v-else class="empty-text">Aucune candidature pour le moment.</p>
-          </BaseCard>
         </div>
 
-        <div class="profile-sidebar">
-          <!-- Actions -->
+        <aside class="sidebar-content">
           <BaseCard class="danger-card">
-            <h3 class="danger-title">Zone de danger</h3>
-            <p class="danger-description">La suppression de votre compte est définitive.</p>
-            <BaseButton variant="secondary" full-width class="danger-button" @click="handleDelete">
-              Supprimer mon compte
-            </BaseButton>
+            <BaseTypography variant="h3" bold class="card-title danger">Zone de danger</BaseTypography>
+            <BaseTypography variant="small" class="danger-text">La suppression de votre compte est définitive et toutes vos données seront effacées.</BaseTypography>
+            <BaseButton variant="outline" size="sm" class="delete-btn" @click="handleDeleteAccount">Supprimer mon compte</BaseButton>
           </BaseCard>
-        </div>
+        </aside>
       </div>
-    </main>
-  </div>
+    </div>
+  </MainLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { 
-  offerApplicationControllerGetApplicationsByStudentId, 
-  offerApplicationControllerCancelApplication,
-  accountControllerDeleteAccount,
   studentControllerGetStudentProfile,
   companyControllerGetCompanyProfile,
   studentControllerUpdateCompanyProfile,
-  companyControllerUpdateCompanyProfile
+  companyControllerUpdateCompanyProfile,
+  accountControllerDeleteAccount
 } from '../openApi';
-import ShibuiLogo from '../components/ui/ShibuiLogo.vue';
-import BaseButton from '../components/ui/BaseButton.vue';
-import BaseCard from '../components/ui/BaseCard.vue';
+import MainLayout from '../components/templates/MainLayout.vue';
+import BaseButton from '../components/atoms/BaseButton.vue';
+import BaseCard from '../components/atoms/BaseCard.vue';
+import BaseTypography from '../components/atoms/BaseTypography.vue';
+import FormField from '../components/molecules/FormField.vue';
 import type { Application } from '../types';
 
 const { user, logout } = useAuth();
-const applications = ref<Application[]>([]);
+const router = useRouter();
 const profile = ref<any>(null);
 const profileLoading = ref(false);
 const editingProfile = ref(false);
 const savingProfile = ref(false);
 const profileForm = ref<any>({});
+
+function goHome() {
+  if (user.value?.role === 'COMPANY') {
+    router.push('/company/offers');
+  } else {
+    router.push('/offers');
+  }
+}
+
+const industryLabels: Record<string, string> = {
+  AEROSPACE: 'Aéronautique',
+  AGRICULTURE: 'Agriculture',
+  AUTOMOTIVE: 'Automobile',
+  BANKING_INSURANCE: 'Banque & Assurance',
+  CONSTRUCTION: 'Construction',
+  EDUCATION: 'Éducation',
+  ENERGY: 'Énergie',
+  HEALTHCARE: 'Santé',
+  HOSPITALITY: 'Hôtellerie & Restauration',
+  IT_SERVICES: 'Services IT',
+  LUXURY: 'Luxe',
+  MANUFACTURING: 'Industrie',
+  MEDIA_ENTERTAINMENT: 'Médias & Divertissement',
+  RETAIL: 'Commerce de détail',
+  PUBLIC_SECTOR: 'Secteur public',
+  TRANSPORT_LOGISTICS: 'Transport & Logistique'
+};
+
+function formatIndustry(industry: string) {
+  return industryLabels[industry] || industry;
+}
 
 async function fetchProfile() {
   if (!user.value) return;
@@ -179,7 +198,8 @@ async function fetchProfile() {
       profileForm.value = {
         legalName: companyData.legalName,
         industry: companyData.industry,
-        description: companyData.description
+        description: companyData.description,
+        siret: companyData.siret
       };
     }
   } catch (err) {
@@ -215,29 +235,7 @@ async function handleUpdateProfile() {
 
 onMounted(async () => {
   fetchProfile();
-  if (user.value?.role === 'STUDENT') {
-    try {
-      const { data } = await offerApplicationControllerGetApplicationsByStudentId({ 
-        path: { studentId: user.value.id } 
-      });
-      applications.value = data as Application[];
-    } catch (err) {
-      console.error('Failed to fetch applications');
-    }
-  }
 });
-
-async function handleCancel(id: number) {
-  if (!confirm('Voulez-vous vraiment annuler cette candidature ?')) return;
-  try {
-    await offerApplicationControllerCancelApplication({ 
-      path: { applicationId: id } 
-    });
-    applications.value = applications.value.filter(a => a.id !== id);
-  } catch (err) {
-    alert('Erreur lors de l\'annulation.');
-  }
-}
 
 async function handleDelete() {
   if (!user.value) return;
@@ -254,203 +252,178 @@ async function handleDelete() {
 </script>
 
 <style scoped>
-.profile-view {
-  min-height: 100vh;
-  background-color: var(--shibui-gray);
-}
-
-.profile-header {
-  background-color: white;
-  border-bottom: 1px solid #f3f4f6;
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.clickable-logo {
-  cursor: pointer;
-}
-
-.profile-main {
-  max-width: 56rem;
+.profile-container {
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
 }
 
-.profile-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: var(--shibui-dark-gray);
+.page-title {
   margin-bottom: 2rem;
 }
 
 .profile-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 300px;
   gap: 2rem;
 }
 
-@media (min-width: 768px) {
-  .profile-grid {
-    grid-template-columns: 2fr 1fr;
-  }
-}
-
-.profile-content {
+.main-content {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+.profile-card {
+  padding: 2rem;
 }
 
 .card-title {
-  font-size: 1.125rem;
-  font-weight: 700;
+  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
 }
 
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.info-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 2rem;
 }
 
-.info-value {
-  color: var(--shibui-dark-gray);
-  font-weight: 500;
-}
-
-.edit-profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.form-group {
+.info-group {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.form-group label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-light);
+.full-width {
+  grid-column: span 2;
 }
 
-.form-input {
-  padding: 0.5rem;
+.description-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.card-actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edit-form {
+  border-top: 1px solid var(--color-border);
+  padding-top: 2rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ds-select, .ds-textarea {
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  background-color: white;
+}
+
+.ds-select:focus, .ds-textarea:focus {
+  border-color: var(--shibui-orange);
+  box-shadow: 0 0 0 2px var(--shibui-light-orange);
 }
 
 .form-actions {
   display: flex;
-  gap: 0.5rem;
   justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
 .applications-list {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
 .application-item {
-  padding: 1rem 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f9fafb;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--shibui-gray);
 }
 
-.application-item:last-child {
-  border-bottom: none;
-}
-
-.app-title {
-  font-weight: 700;
-}
-
-.app-date {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.app-actions {
+.app-status {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  background-color: var(--shibui-light-orange);
-  color: var(--shibui-orange);
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 9999px;
+.empty-state {
+  text-align: center;
+  padding: 3rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.cancel-button {
-  background: none;
-  border: none;
-  color: #9ca3af;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: color 0.2s;
-}
-
-.cancel-button:hover {
-  color: #ef4444;
-}
-
-.icon-sm {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.empty-text {
-  color: #6b7280;
-  font-style: italic;
-}
-
-.profile-sidebar {
+.sidebar-content {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
 .danger-card {
-  background-color: #fef2f2 !important;
-  border-color: #fee2e2 !important;
+  padding: 1.5rem;
+  border: 1px solid #fee2e2;
 }
 
-.danger-title {
-  color: #b91c1c;
-  font-weight: 700;
+.card-title.danger {
+  color: var(--color-danger);
   margin-bottom: 0.5rem;
 }
 
-.danger-description {
-  color: #dc2626;
-  font-size: 0.875rem;
+.danger-text {
+  color: #991b1b;
   margin-bottom: 1.5rem;
+  display: block;
 }
 
-.danger-button {
-  color: #dc2626 !important;
-  border-color: #fecaca !important;
+.delete-btn {
+  border-color: #fee2e2;
+  color: var(--color-danger);
 }
 
-.danger-button:hover {
-  background-color: #fee2e2 !important;
+.delete-btn:hover {
+  background-color: #fef2f2;
+}
+
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-grid, .details-grid, .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .full-width {
+    grid-column: span 1;
+  }
 }
 </style>

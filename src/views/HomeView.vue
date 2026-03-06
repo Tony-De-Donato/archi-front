@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import ShibuiLogo from '../components/ui/ShibuiLogo.vue';
-import BaseButton from '../components/ui/BaseButton.vue';
+import ShibuiLogo from '../components/atoms/ShibuiLogo.vue';
+import BaseButton from '../components/atoms/BaseButton.vue';
 </script>
 
 <style scoped>

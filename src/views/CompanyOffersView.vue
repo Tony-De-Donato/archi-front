@@ -1,79 +1,63 @@
 <template>
-  <div class="company-offers-view">
-    <header class="view-header">
-      <div class="header-content">
-        <ShibuiLogo />
-        <nav class="header-nav">
-          <router-link to="/offers" class="nav-link">Tableau de bord</router-link>
-          <router-link to="/profile" class="nav-link">Profil</router-link>
-          <BaseButton variant="ghost" @click="logout">Déconnexion</BaseButton>
-        </nav>
+  <MainLayout
+    :is-authenticated="!!user"
+    :user-email="user?.email"
+    :user-role="user?.role"
+    @logout="logout"
+  >
+    <div class="company-offers-view">
+      <div class="section-header">
+        <BaseTypography variant="h2" bold>Mes Offres</BaseTypography>
+        <BaseButton @click="showCreateModal = true">Créer une offre</BaseButton>
       </div>
-    </header>
 
-    <main class="view-main">
-      <div class="main-content">
-        <div class="section-header">
-          <h1 class="view-title">Mes Offres</h1>
-          <BaseButton @click="showCreateModal = true">Créer une offre</BaseButton>
-        </div>
-
-        <div v-if="loading" class="loading-state">
-          Chargement des offres...
-        </div>
-
-        <div v-else-if="offers.length === 0" class="empty-state">
-          <p>Vous n'avez pas encore créé d'offres.</p>
-          <BaseButton variant="outline" @click="showCreateModal = true">Créer ma première offre</BaseButton>
-        </div>
-
-        <div v-else class="offers-grid">
-          <BaseCard v-for="offer in offers" :key="offer.id" padding="md" class="offer-card">
-            <div class="offer-card-header">
-              <h3 class="offer-title">{{ offer.title }}</h3>
-              <span :class="['status-badge', offer.status.toLowerCase()]">{{ offer.status }}</span>
-            </div>
-            <p class="offer-location">{{ offer.location }}</p>
-            <p class="offer-description">{{ truncate(offer.description, 100) }}</p>
-            
-            <div class="offer-actions">
-              <BaseButton size="sm" variant="outline" @click="viewApplications(offer.id)">
-                Candidatures
-              </BaseButton>
-              <BaseButton size="sm" variant="ghost" @click="editOffer(offer)">
-                Modifier
-              </BaseButton>
-              <BaseButton v-if="offer.status === 'DRAFT'" size="sm" variant="ghost" color="primary" @click="publishOffer(offer.id)">
-                Publier
-              </BaseButton>
-              <BaseButton v-if="offer.status === 'PUBLISHED'" size="sm" variant="ghost" color="warning" @click="closeOffer(offer.id)">
-                Fermer
-              </BaseButton>
-              <BaseButton size="sm" variant="ghost" color="danger" @click="handleDeleteOffer(offer.id)">
-                Supprimer
-              </BaseButton>
-            </div>
-          </BaseCard>
-        </div>
+      <div v-if="loading" class="loading-state">
+        <BaseTypography variant="p" color="light">Chargement des offres...</BaseTypography>
       </div>
-    </main>
 
-    <!-- Create/Edit Modal -->
+      <div v-else-if="offers.length === 0" class="empty-state">
+        <BaseTypography variant="p" color="light">Vous n'avez pas encore créé d'offres.</BaseTypography>
+        <BaseButton variant="outline" @click="showCreateModal = true">Créer ma première offre</BaseButton>
+      </div>
+
+      <div v-else class="offers-grid">
+        <BaseCard v-for="offer in offers" :key="offer.id" class="offer-card">
+          <div class="offer-card-header">
+            <BaseTypography variant="h3" bold>{{ offer.title }}</BaseTypography>
+            <BaseBadge :variant="offer.status === 'PUBLISHED' ? 'success' : 'info'">{{ offer.status }}</BaseBadge>
+          </div>
+          <BaseTypography variant="p" color="light" class="offer-location">{{ offer.location }}</BaseTypography>
+          <BaseTypography variant="p" class="offer-description">{{ truncate(offer.description, 100) }}</BaseTypography>
+          
+          <div class="offer-actions">
+            <BaseButton size="sm" variant="ghost" @click="viewApplications(offer.id)">
+              Candidatures
+            </BaseButton>
+            <BaseButton size="sm" variant="ghost" @click="editOffer(offer)">
+              Modifier
+            </BaseButton>
+            <BaseButton v-if="offer.status === 'DRAFT'" size="sm" variant="ghost" @click="publishOffer(offer.id)">
+              Publier
+            </BaseButton>
+            <BaseButton size="sm" variant="ghost" @click="handleDeleteOffer(offer.id)">
+              Supprimer
+            </BaseButton>
+          </div>
+        </BaseCard>
+      </div>
+    </div>
+
+    <!-- Modals -->
     <div v-if="showCreateModal || editingOffer" class="modal-overlay">
-      <BaseCard padding="lg" class="modal-card">
-        <h2 class="modal-title">{{ editingOffer ? 'Modifier l\'offre' : 'Nouvelle offre' }}</h2>
-        <form @submit.prevent="saveOffer" class="offer-form">
-          <div class="form-group">
-            <label>Titre</label>
-            <input v-model="form.title" type="text" required class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>Lieu</label>
-            <input v-model="form.location" type="text" required class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>Secteur d'étude</label>
-            <select v-model="form.fieldOfStudy" required class="form-input">
+      <BaseCard class="modal-card">
+        <BaseTypography variant="h3" bold class="modal-title">{{ editingOffer ? 'Modifier l\'offre' : 'Nouvelle offre' }}</BaseTypography>
+        <form @submit.prevent class="offer-form">
+          <FormField label="Titre" v-model="form.title" required />
+          <FormField label="Lieu" v-model="form.location" required />
+          <FormField label="Salaire (annuel brut)" v-model.number="form.salary" type="number" placeholder="Ex: 1200" />
+          
+          <FormField label="Secteur d'étude">
+            <select v-model="form.fieldOfStudy" required class="ds-select">
               <option value="ADMINISTRATION">Administration</option>
               <option value="ARTS_DESIGN">Arts & Design</option>
               <option value="BUSINESS_MANAGEMENT">Business & Management</option>
@@ -87,70 +71,94 @@
               <option value="MARKETING">Marketing</option>
               <option value="SALES">Vente</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea v-model="form.description" required class="form-input" rows="5"></textarea>
-          </div>
+          </FormField>
+          
+          <FormField label="Description">
+            <textarea v-model="form.description" required class="ds-textarea" rows="5"></textarea>
+          </FormField>
+
           <div class="modal-actions">
             <BaseButton variant="ghost" @click="closeModal">Annuler</BaseButton>
-            <BaseButton type="submit" :loading="saving">Enregistrer</BaseButton>
+            <div class="action-group">
+              <BaseButton 
+                v-if="!editingOffer || editingOffer.status === 'DRAFT'"
+                variant="ghost"
+                @click="saveOffer('DRAFT')" 
+                :loading="saving"
+              >
+                Brouillon
+              </BaseButton>
+              <BaseButton 
+                @click="saveOffer('PUBLISHED')" 
+                :loading="saving"
+              >
+                {{ editingOffer ? 'Mettre à jour & Publier' : 'Publier l\'offre' }}
+              </BaseButton>
+            </div>
           </div>
         </form>
       </BaseCard>
     </div>
 
-    <!-- Applications Modal -->
     <div v-if="showApplicationsModal" class="modal-overlay">
-      <BaseCard padding="lg" class="modal-card wide">
+      <BaseCard class="modal-card wide">
         <div class="modal-header">
-          <h2 class="modal-title">Candidatures pour {{ selectedOfferTitle }}</h2>
+          <BaseTypography variant="h3" bold>Candidatures pour {{ selectedOfferTitle }}</BaseTypography>
           <BaseButton variant="ghost" size="sm" @click="showApplicationsModal = false">Fermer</BaseButton>
         </div>
         
         <div v-if="loadingApplications" class="loading-state">
-          Chargement des candidatures...
+          <BaseTypography variant="p">Chargement des candidatures...</BaseTypography>
         </div>
         <div v-else-if="applications.length === 0" class="empty-state">
-          Aucune candidature reçue pour le moment.
+          <BaseTypography variant="p" color="light">Aucune candidature reçue pour le moment.</BaseTypography>
         </div>
         <div v-else class="applications-list">
           <div v-for="app in applications" :key="app.id" class="application-item">
             <div class="app-info">
-              <p class="app-student">Étudiant #{{ app.studentId }}</p>
-              <p class="app-date">Postulé le {{ formatDate(app.appliedAt) }}</p>
+              <div class="app-student-header">
+                <BaseTypography variant="h4">{{ studentStore.getStudentName(app.studentId) }}</BaseTypography>
+                <BaseBadge :variant="app.status === 'ACCEPTED' ? 'success' : app.status === 'REJECTED' ? 'danger' : 'info'">
+                  {{ app.status }}
+                </BaseBadge>
+              </div>
+              <BaseTypography v-if="app.description" variant="p" class="app-description">{{ app.description }}</BaseTypography>
+              <BaseTypography variant="caption" color="light">Postulé le {{ formatDate(app.createdAt) }}</BaseTypography>
             </div>
             <div class="app-actions">
-              <a :href="app.cvUrl" target="_blank" class="cv-link">Voir CV</a>
-              <span :class="['status-badge', app.status.toLowerCase()]">{{ app.status }}</span>
+              <a :href="app.cvUrl" target="_blank" class="cv-button">
+                <BaseButton size="sm" variant="outline">Voir CV</BaseButton>
+              </a>
             </div>
           </div>
         </div>
       </BaseCard>
     </div>
-  </div>
+  </MainLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { useAuth } from '../composables/useAuth';
-import { 
-  offerControllerGetOffersByCompanyId, 
-  offerControllerCreateOffer, 
-  offerControllerUpdateOffer, 
-  offerControllerDeleteOffer,
-  offerControllerPublishOffer,
-  offerControllerCloseOffer,
-  offerApplicationControllerGetApplicationByOfferId
-} from '../openApi';
-import ShibuiLogo from '../components/ui/ShibuiLogo.vue';
-import BaseButton from '../components/ui/BaseButton.vue';
-import BaseCard from '../components/ui/BaseCard.vue';
+import { useOfferStore } from '../stores/offers';
+import { useApplicationStore } from '../stores/applications';
+import { useStudentStore } from '../stores/students';
+import MainLayout from '../components/templates/MainLayout.vue';
+import BaseButton from '../components/atoms/BaseButton.vue';
+import BaseCard from '../components/atoms/BaseCard.vue';
+import BaseTypography from '../components/atoms/BaseTypography.vue';
+import BaseBadge from '../components/atoms/BaseBadge.vue';
+import FormField from '../components/molecules/FormField.vue';
 
 const { user, logout } = useAuth();
+const offerStore = useOfferStore();
+const applicationStore = useApplicationStore();
+const studentStore = useStudentStore();
 
-const offers = ref<any[]>([]);
-const loading = ref(false);
+const offers = computed(() => 
+  offerStore.offers.filter(o => o.companyId === user.value?.id)
+);
+const loading = computed(() => offerStore.loading);
 const showCreateModal = ref(false);
 const editingOffer = ref<any>(null);
 const saving = ref(false);
@@ -159,22 +167,13 @@ const form = reactive({
   title: '',
   description: '',
   location: '',
-  fieldOfStudy: 'COMPUTER_SCIENCE' as any
+  fieldOfStudy: 'COMPUTER_SCIENCE' as any,
+  salary: undefined as number | undefined
 });
 
 async function fetchOffers() {
   if (!user.value) return;
-  loading.value = true;
-  try {
-    const { data } = await offerControllerGetOffersByCompanyId({
-      path: { id: user.value.id }
-    });
-    offers.value = data as any[];
-  } catch (err) {
-    console.error('Failed to fetch offers:', err);
-  } finally {
-    loading.value = false;
-  }
+  await offerStore.fetchOffersByCompany(user.value.id);
 }
 
 onMounted(fetchOffers);
@@ -185,6 +184,7 @@ function editOffer(offer: any) {
   form.description = offer.description;
   form.location = offer.location;
   form.fieldOfStudy = offer.fieldOfStudy;
+  form.salary = offer.salary;
   showCreateModal.value = true;
 }
 
@@ -195,24 +195,29 @@ function closeModal() {
   form.description = '';
   form.location = '';
   form.fieldOfStudy = 'COMPUTER_SCIENCE';
+  form.salary = undefined;
 }
 
-async function saveOffer() {
+async function saveOffer(targetStatus: 'DRAFT' | 'PUBLISHED' = 'DRAFT') {
   if (!user.value) return;
   saving.value = true;
   try {
+    const offerData = {
+      title: form.title,
+      description: form.description,
+      location: form.location,
+      fieldOfStudy: form.fieldOfStudy,
+      salary: form.salary
+    };
+
+    const publish = targetStatus === 'PUBLISHED';
+
     if (editingOffer.value) {
-      await offerControllerUpdateOffer({
-        path: { id: editingOffer.value.id },
-        body: form
-      });
+      await offerStore.updateOffer(editingOffer.value.id, offerData, publish);
     } else {
-      await offerControllerCreateOffer({
-        path: { id: user.value.id },
-        body: { ...form, status: 'DRAFT' }
-      });
+      await offerStore.createOffer(user.value.id, offerData, publish);
     }
-    await fetchOffers();
+
     closeModal();
   } catch (err) {
     console.error('Failed to save offer:', err);
@@ -225,8 +230,7 @@ async function saveOffer() {
 async function handleDeleteOffer(id: number) {
   if (!confirm('Voulez-vous vraiment supprimer cette offre ?')) return;
   try {
-    await offerControllerDeleteOffer({ path: { offerId: id } });
-    await fetchOffers();
+    await offerStore.deleteOffer(id);
   } catch (err) {
     console.error('Failed to delete offer:', err);
     alert('Erreur lors de la suppression.');
@@ -235,19 +239,9 @@ async function handleDeleteOffer(id: number) {
 
 async function publishOffer(id: number) {
   try {
-    await offerControllerPublishOffer({ path: { offerId: id } });
-    await fetchOffers();
+    await offerStore.updateOffer(id, {}, true);
   } catch (err) {
     console.error('Failed to publish offer:', err);
-  }
-}
-
-async function closeOffer(id: number) {
-  try {
-    await offerControllerCloseOffer({ path: { offerId: id } });
-    await fetchOffers();
-  } catch (err) {
-    console.error('Failed to close offer:', err);
   }
 }
 
@@ -263,10 +257,12 @@ async function viewApplications(offerId: number) {
   showApplicationsModal.value = true;
   loadingApplications.value = true;
   try {
-    const { data } = await offerApplicationControllerGetApplicationByOfferId({
-      path: { offerId }
-    });
-    applications.value = data as any[];
+    const apps = await applicationStore.fetchOfferApplications(offerId);
+    applications.value = apps;
+    
+    // Charger les noms des étudiants
+    const studentIds = Array.from(new Set(apps.map(a => a.studentId)));
+    await Promise.all(studentIds.map(id => studentStore.fetchStudentById(id)));
   } catch (err) {
     console.error('Failed to fetch applications:', err);
   } finally {
@@ -279,56 +275,20 @@ function truncate(str: string, n: number) {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString();
+  if (!dateStr) return 'Date inconnue';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'Date invalide';
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 }
 </script>
 
 <style scoped>
 .company-offers-view {
-  min-height: 100vh;
-  background-color: var(--color-bg);
-}
-
-.view-header {
-  background-color: white;
-  border-bottom: 1px solid var(--color-border);
-  padding: 1rem 0;
-}
-
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-nav {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-}
-
-.nav-link {
-  color: var(--color-text-light);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-link:hover, .router-link-active {
-  color: var(--color-primary);
-}
-
-.view-main {
   padding: 2rem 0;
-}
-
-.main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
 }
 
 .section-header {
@@ -338,15 +298,17 @@ function formatDate(dateStr: string) {
   margin-bottom: 2rem;
 }
 
-.view-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-}
-
 .offers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
+}
+
+.offer-card {
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .offer-card-header {
@@ -354,34 +316,16 @@ function formatDate(dateStr: string) {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 0.5rem;
+  gap: 1rem;
 }
-
-.offer-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.status-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-badge.draft { background-color: #f3f4f6; color: #374151; }
-.status-badge.published { background-color: #d1fae5; color: #065f46; }
 
 .offer-location {
-  color: var(--color-text-light);
-  font-size: 0.875rem;
   margin-bottom: 1rem;
 }
 
 .offer-description {
-  font-size: 0.875rem;
+  flex: 1;
   margin-bottom: 1.5rem;
-  color: var(--color-text);
   line-height: 1.5;
 }
 
@@ -390,7 +334,8 @@ function formatDate(dateStr: string) {
   flex-wrap: wrap;
   gap: 0.5rem;
   border-top: 1px solid var(--color-border);
-  padding-top: 1rem;
+  padding-top: 1.25rem;
+  margin-top: auto;
 }
 
 .modal-overlay {
@@ -400,13 +345,16 @@ function formatDate(dateStr: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
-  padding: 1rem;
+  z-index: 1000;
+  padding: 1.5rem;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2.5rem;
 }
 
 .modal-card.wide {
@@ -414,41 +362,50 @@ function formatDate(dateStr: string) {
 }
 
 .modal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .offer-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.form-group label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-light);
-}
-
-.form-input {
-  padding: 0.625rem;
+.ds-select, .ds-textarea {
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 8px;
   font-size: 1rem;
+  outline: none;
+  background-color: white;
+}
+
+.ds-select:focus, .ds-textarea:focus {
+  border-color: var(--shibui-orange);
+  box-shadow: 0 0 0 2px var(--shibui-light-orange);
 }
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
   gap: 1rem;
-  margin-top: 1rem;
+}
+
+.action-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .applications-list {
@@ -461,25 +418,29 @@ function formatDate(dateStr: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 12px;
+  background-color: var(--shibui-gray);
 }
 
-.cv-link {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
+.app-student-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-.cv-link:hover {
-  text-decoration: underline;
+.app-description {
+  margin-bottom: 0.5rem;
 }
 
 .loading-state, .empty-state {
   text-align: center;
-  padding: 3rem;
-  color: var(--color-text-light);
+  padding: 4rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 </style>

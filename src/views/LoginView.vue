@@ -2,24 +2,28 @@
   <div class="login-view">
     <!-- Logo -->
     <div class="logo-wrapper">
-      <ShibuiLogo size="lg" @click="$router.push('/')" class="clickable-logo" />
+      <router-link to="/" class="logo-link">
+        <ShibuiLogo class="logo" />
+      </router-link>
     </div>
 
     <!-- Login Card -->
-    <BaseCard class="login-card" padding="lg">
-      <h2 class="login-title">Préparez-vous pour l'étape suivante</h2>
-      <p class="login-subtitle">Créez un compte ou connectez-vous.</p>
+    <BaseCard class="login-card">
+      <BaseTypography variant="h3" bold class="login-title">Préparez-vous pour l'étape suivante</BaseTypography>
+      <BaseTypography variant="p" class="login-subtitle">Créez un compte ou connectez-vous.</BaseTypography>
 
       <form @submit.prevent="handleLogin" class="login-form">
-        <BaseInput
+        <FormField
           label="Adresse email"
+          id="email"
           type="email"
           placeholder="votre@email.com"
           v-model="email"
           required
         />
-        <BaseInput
+        <FormField
           label="Mot de passe"
+          id="password"
           type="password"
           placeholder="Votre mot de passe"
           v-model="password"
@@ -33,25 +37,26 @@
         <BaseButton type="submit" full-width :loading="loading" size="lg">
           Continuer
         </BaseButton>
+        <BaseTypography variant="caption" class="terms-text">
+          <span>
+            Si c'est votre première visite du site il va falloir attendre environ 1 minute le temps que l'hébergeur lance l'api.
+          </span>
+        </BaseTypography>
       </form>
 
-
-      <div class="divider">
-        <div class="divider-line"></div>
-        <div class="divider-text">
-        </div>
-      </div>
-
       <div class="login-footer">
-        <p class="terms-text">
+        <BaseTypography variant="caption" class="terms-text">
           En créant un compte ou en vous connectant, vous comprenez et acceptez les
           <a href="https://canardsdulacbrome.com/trouver-une-recette/" class="shibui-link" target="_blank" rel="noopener noreferrer">conditions d'utilisation</a>
           de shibui.
-        </p>
-        <p class="register-link-text">
-          Nouveau sur Shibui ?
-          <router-link to="/register" class="shibui-link font-bold">S'enregistrer</router-link>
-        </p>
+        </BaseTypography>
+        
+        <div class="register-section">
+          <BaseTypography variant="p">
+            Nouveau sur Shibui ?
+            <router-link to="/register" class="shibui-link font-bold">S'enregistrer</router-link>
+          </BaseTypography>
+        </div>
       </div>
     </BaseCard>
   </div>
@@ -60,10 +65,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuth } from '../composables/useAuth';
-import ShibuiLogo from '../components/ui/ShibuiLogo.vue';
-import BaseCard from '../components/ui/BaseCard.vue';
-import BaseInput from '../components/ui/BaseInput.vue';
-import BaseButton from '../components/ui/BaseButton.vue';
+import ShibuiLogo from '../components/atoms/ShibuiLogo.vue';
+import BaseCard from '../components/atoms/BaseCard.vue';
+import BaseButton from '../components/atoms/BaseButton.vue';
+import BaseTypography from '../components/atoms/BaseTypography.vue';
+import FormField from '../components/molecules/FormField.vue';
 
 const { login, loading, error } = useAuth();
 const email = ref('');
@@ -73,7 +79,7 @@ async function handleLogin() {
   try {
     await login({ email: email.value, password: password.value });
   } catch (err) {
-    // Error is handled in the composable and shown via `error` computed property
+    // Error is handled in the composable
   }
 }
 </script>
@@ -93,94 +99,64 @@ async function handleLogin() {
   margin-bottom: 3rem;
 }
 
-.clickable-logo {
-  cursor: pointer;
+.logo-link {
+  text-decoration: none;
+  display: flex;
+}
+
+.logo {
+  height: 48px;
 }
 
 .login-card {
   width: 100%;
   max-width: 448px;
+  padding: 2.5rem;
 }
 
 .login-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--shibui-dark-gray);
   margin-bottom: 0.5rem;
 }
 
 .login-subtitle {
-  color: #6b7280;
+  color: var(--color-text-light);
   margin-bottom: 2rem;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.forgot-password-link {
-  margin-top: 1rem;
-  text-align: right;
+  gap: 0.5rem;
 }
 
 .error-banner {
   background-color: #fef2f2;
-  color: #ef4444;
+  color: var(--color-danger);
   padding: 0.75rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-}
-
-.divider {
-  position: relative;
-  margin: 2rem 0;
-}
-
-.divider-line {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-}
-
-.divider-line::after {
-  content: "";
-  width: 100%;
-  border-top: 1px solid #e5e7eb;
-}
-
-.divider-text {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  font-size: 0.875rem;
-}
-
-.divider-text span {
-  background-color: white;
-  padding: 0 0.5rem;
-  color: #6b7280;
+  margin-bottom: 1rem;
 }
 
 .login-footer {
   margin-top: 2rem;
   text-align: center;
-  font-size: 0.875rem;
 }
 
 .terms-text {
-  color: #6b7280;
+  color: var(--color-text-light);
 }
 
-.register-link-text {
+.register-section {
   margin-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
 }
 
 .shibui-link {
   color: var(--shibui-orange);
   text-decoration: none;
+  font-weight: 600;
 }
 
 .shibui-link:hover {

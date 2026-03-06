@@ -19,12 +19,15 @@ withDefaults(defineProps<{
 .logo-container {
   display: flex;
   align-items: center;
+  text-decoration: none !important;
+  color: inherit;
   user-select: none;
 }
 
 .logo-icon {
   background-color: var(--shibui-orange);
   border-radius: 9999px;
+  text-decoration: none !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -32,16 +35,18 @@ withDefaults(defineProps<{
 }
 
 .logo-s {
-  color: white;
+  color: white !important;
   font-weight: 900;
   line-height: 1;
   font-style: italic;
+  text-decoration: none !important;
 }
 
 .logo-text {
   font-weight: 700;
   letter-spacing: -0.025em;
-  color: var(--shibui-orange);
+  text-decoration: none !important;
+  color: var(--shibui-orange) !important;
 }
 
 /* Size variations */

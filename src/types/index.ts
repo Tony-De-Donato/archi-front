@@ -38,16 +38,27 @@ export interface User {
   role: 'STUDENT' | 'COMPANY' | 'ADMIN';
 }
 
+export interface CompanyProfile {
+  id: number;
+  legalName: string;
+  industry?: string;
+  description?: string;
+  siret?: string;
+}
+
 export interface Offer {
   id: number;
   title: string;
   companyId: number;
   companyName?: string;
+  company?: CompanyProfile;
   location: string;
   description: string;
   salary?: number | null;
   type?: string; // e.g. "Alternance", "CDI"
+  fieldOfStudy?: string;
   postedAt?: string;
+  status?: 'DRAFT' | 'PUBLISHED' | 'CLOSED';
 }
 
 export interface Application {
@@ -55,6 +66,7 @@ export interface Application {
   offerId: number;
   studentId: number;
   status: string;
-  appliedAt: string;
+  createdAt: string;
+  description?: string;
   offer?: Offer;
 }
